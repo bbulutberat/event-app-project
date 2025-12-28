@@ -3,25 +3,28 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UsersModule } from './users/users.module';
-import { CategoriesModule } from './categories/categories.module';
 import { EventsModule } from './events/events.module';
+import { CategoriesModule } from './categories/categories.module';
 import { RegistrationsModule } from './registrations/registrations.module';
+import { User } from './users/entities/user.entity';
+import { Event } from './events/entities/event.entity';
+import { Category } from './categories/entities/category.entity';
+import { Registration } from './registrations/entities/registration.entity';
 
 @Module({
   imports: [
     TypeOrmModule.forRoot({
       type: 'postgres',
-      host: 'localhost',
-      port: 5432,
-      username: 'postgres',
-      password: '197453', // <--- BURAYA KENDİ ŞİFRENİ YAZ
-      database: 'eventdb',
-      autoLoadEntities: true, // Yaptığımız ayar bu
-      synchronize: true,
+      // ÖNEMLİ AYAR: Eğer Render bize bir URL verirse onu kullan, yoksa localhost'u kullan.
+      url: process.env.DATABASE_URL || 'postgres://postgres:197453@localhost:5432/eventdb', 
+      
+      entities: [User, Event, Category, Registration],
+      synchronize: true, // Tabloları otomatik oluşturur
+      ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : false, // Render için SSL gerekli
     }),
     UsersModule,
-    CategoriesModule,
     EventsModule,
+    CategoriesModule,
     RegistrationsModule,
   ],
   controllers: [AppController],
