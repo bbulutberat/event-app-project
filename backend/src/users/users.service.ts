@@ -39,17 +39,19 @@ export class UsersService {
 
   update(id: number, updateUserDto: any) {
     
+    // Admin yetkisi verilmek isteniyorsa şifre kontrolü yap
     if (updateUserDto.role) {
-      
-      if (updateUserDto.adminSecret === '197453') {
-        
-        delete updateUserDto.adminSecret;
-        
+      // DİKKAT: Burayı Postman'deki şifreyle (123456) aynı yaptık!
+      if (updateUserDto.adminSecret === '123456') { 
+        // Şifre doğruysa role dokunma, admin olarak kalsın.
       } else {
+        // Şifre yanlışsa role'ü sil (admin olamazsın)
         delete updateUserDto.role;
       }
     }
 
+    // EN KRİTİK YER: Veritabanına "adminSecret" diye bir şey kaydetmeye çalışma!
+    // Bu satır olmazsa 500 hatası alırsın.
     if (updateUserDto.adminSecret) {
       delete updateUserDto.adminSecret;
     }
