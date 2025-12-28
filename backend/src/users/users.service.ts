@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadRequestException, InternalServerErrorException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
@@ -16,16 +16,13 @@ export class UsersService {
     return this.userRepository.save(createUserDto);
   }
 
-  // GÜNCELLENDİ: Hem mail hem telefon ile giriş kontrolü
   async login(identifier: string, pass: string) {
-    // Kullanıcıyı E-posta VEYA Telefon numarası ile bul
     const user = await this.userRepository.findOne({
       where: [
         { email: identifier, password: pass },
         { phoneNumber: identifier, password: pass }
       ]
     });
-    
     return user || null;
   }
 
@@ -37,31 +34,50 @@ export class UsersService {
     return this.userRepository.findOneBy({ id });
   }
 
+  // --- DEDEKTİF MODU AKTİF ---
   async update(id: number, updateUserDto: any) {
-    
-    // YENİ YÖNTEM: Gelen veriyi olduğu gibi kullanmıyoruz.
-    // Tertemiz, boş bir "güncelleme kutusu" oluşturuyoruz.
+    console.log("DEDEKTIF: Guncelleme istegi geldi. ID:", id);
+    console.log("DEDEKTIF: Gelen veri:", JSON.stringify(updateUserDto));
+
     const cleanData: any = {};
 
-    // Sadece izin verdiğimiz bilgileri tek tek bu kutuya koyuyoruz.
-    // (Böylece adminSecret istese de araya kaynayamaz)
+    // Sadece güvenli verileri alıyoruz
     if (updateUserDto.firstName) cleanData.firstName = updateUserDto.firstName;
     if (updateUserDto.lastName) cleanData.lastName = updateUserDto.lastName;
     if (updateUserDto.email) cleanData.email = updateUserDto.email;
     if (updateUserDto.phoneNumber) cleanData.phoneNumber = updateUserDto.phoneNumber;
     
-    // ŞİFRE KONTROLÜ VE YETKİ
+    // Şifre kontrolü
     if (updateUserDto.role === 'admin') {
-      // Eğer postman'den gelen şifre doğruysa kutuya 'admin' yazıyoruz.
+      // Şifre 123456 ise admin yap, değilse yapma
       if (updateUserDto.adminSecret === '123456') {
         cleanData.role = 'admin';
+        console.log("DEDEKTIF: Şifre doğru, admin yetkisi veriliyor.");
+      } else {
+        console.log("DEDEKTIF: Şifre YANLIŞ veya YOK.");
       }
-      // Şifre yanlışsa hiçbir şey yapmıyoruz (role eklenmiyor).
     }
 
-    // Artık elimizde içinde SADECE temiz verilerin olduğu "cleanData" var.
-    return this.userRepository.update(id, cleanData);
+    console.log("DEDEKTIF: Veritabanına gönderilecek TEMIZ veri:", JSON.stringify(cleanData));
+
+    try {
+      // Güncellemeyi dene
+      const result = await this.userRepository.update(id, cleanData);
+      return result;
+
+    } catch (error) {
+      // HATA OLURSA BURAYA DÜŞECEK
+      console.error("DEDEKTIF: Veritabanı hatası oluştu!", error);
+      
+      // Postman'e hatayı olduğu gibi gönderiyoruz
+      throw new InternalServerErrorException({
+        message: "Veritabanı güncelleme hatası",
+        errorDetail: error.message, // Hatanın asıl sebebi burada yazacak
+        sqlMessage: error.sqlMessage // SQL hatası varsa burada yazar
+      });
+    }
   }
+  // ---------------------------
 
   remove(id: number) {
     return this.userRepository.delete(id);
