@@ -37,26 +37,30 @@ export class UsersService {
     return this.userRepository.findOneBy({ id });
   }
 
-  update(id: number, updateUserDto: any) {
+  async update(id: number, updateUserDto: any) {
     
-    // Admin yetkisi verilmek isteniyorsa şifre kontrolü yap
-    if (updateUserDto.role) {
-      // DİKKAT: Burayı Postman'deki şifreyle (123456) aynı yaptık!
-      if (updateUserDto.adminSecret === '123456') { 
-        // Şifre doğruysa role dokunma, admin olarak kalsın.
-      } else {
-        // Şifre yanlışsa role'ü sil (admin olamazsın)
-        delete updateUserDto.role;
+    // YENİ YÖNTEM: Gelen veriyi olduğu gibi kullanmıyoruz.
+    // Tertemiz, boş bir "güncelleme kutusu" oluşturuyoruz.
+    const cleanData: any = {};
+
+    // Sadece izin verdiğimiz bilgileri tek tek bu kutuya koyuyoruz.
+    // (Böylece adminSecret istese de araya kaynayamaz)
+    if (updateUserDto.firstName) cleanData.firstName = updateUserDto.firstName;
+    if (updateUserDto.lastName) cleanData.lastName = updateUserDto.lastName;
+    if (updateUserDto.email) cleanData.email = updateUserDto.email;
+    if (updateUserDto.phoneNumber) cleanData.phoneNumber = updateUserDto.phoneNumber;
+    
+    // ŞİFRE KONTROLÜ VE YETKİ
+    if (updateUserDto.role === 'admin') {
+      // Eğer postman'den gelen şifre doğruysa kutuya 'admin' yazıyoruz.
+      if (updateUserDto.adminSecret === '123456') {
+        cleanData.role = 'admin';
       }
+      // Şifre yanlışsa hiçbir şey yapmıyoruz (role eklenmiyor).
     }
 
-    // EN KRİTİK YER: Veritabanına "adminSecret" diye bir şey kaydetmeye çalışma!
-    // Bu satır olmazsa 500 hatası alırsın.
-    if (updateUserDto.adminSecret) {
-      delete updateUserDto.adminSecret;
-    }
-
-    return this.userRepository.update(id, updateUserDto);
+    // Artık elimizde içinde SADECE temiz verilerin olduğu "cleanData" var.
+    return this.userRepository.update(id, cleanData);
   }
 
   remove(id: number) {
