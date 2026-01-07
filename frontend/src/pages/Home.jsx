@@ -7,10 +7,21 @@ function Home() {
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem("user"));
 
-  // Modal State'leri
+  // --- KATILIMCI MODAL STATE ---
   const [participants, setParticipants] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [currentEventTitle, setCurrentEventTitle] = useState("");
+
+  // --- DÜZENLEME MODAL STATE (YENİ EKLENDİ) ---
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editEventId, setEditEventId] = useState(null);
+  
+  // Düzenleme Formu Verileri
+  const [editTitle, setEditTitle] = useState("");
+  const [editDesc, setEditDesc] = useState("");
+  const [editDate, setEditDate] = useState("");
+  const [editLoc, setEditLoc] = useState("");
+  const [editPrice, setEditPrice] = useState("");
 
   useEffect(() => {
     if (!user) {
@@ -23,7 +34,7 @@ function Home() {
   const fetchEvents = async () => {
     try {
       const res = await api.get("/events");
-      setEvents(res.data); // Listeyi güncelle
+      setEvents(res.data);
     } catch (error) {
       console.error("Etkinlikler çekilemedi");
     }
@@ -41,13 +52,13 @@ function Home() {
     }
   };
 
-  // YENİ: Etkinlik Silme Fonksiyonu
+  // --- SİLME FONKSİYONU ---
   const handleDeleteEvent = async (eventId) => {
     if (window.confirm("Bu etkinliği silmek istediğinize emin misiniz? (Bu işlem geri alınamaz)")) {
       try {
         await api.delete(`/events/${eventId}`);
         alert("Etkinlik silindi.");
-        fetchEvents(); // Listeyi yenile ki silinen ekrandan gitsin
+        fetchEvents();
       } catch (error) {
         alert("Silme işlemi başarısız oldu.");
       }
@@ -62,6 +73,39 @@ function Home() {
       setShowModal(true);
     } catch (error) {
       alert("Liste çekilemedi.");
+    }
+  };
+
+  // --- DÜZENLEME PENCERESİNİ AÇMA (YENİ) ---
+  const handleEditClick = (event) => {
+    setEditEventId(event.id);
+    setEditTitle(event.title);
+    setEditDesc(event.description);
+    // Tarih formatını HTML input'a (YYYY-MM-DD) uyumlu hale getir
+    setEditDate(event.date ? event.date.toString().split('T')[0] : "");
+    setEditLoc(event.location);
+    setEditPrice(event.price);
+    
+    setShowEditModal(true); // Modalı aç
+  };
+
+  // --- GÜNCELLEMEYİ KAYDETME (YENİ) ---
+  const handleUpdateEvent = async (e) => {
+    e.preventDefault();
+    try {
+      await api.patch(`/events/${editEventId}`, {
+        title: editTitle,
+        description: editDesc,
+        date: editDate,
+        location: editLoc,
+        price: Number(editPrice)
+      });
+
+      alert("Etkinlik Güncellendi! ✅");
+      setShowEditModal(false); // Modalı kapat
+      fetchEvents(); // Listeyi yenile ki değişiklik görünsün
+    } catch (error) {
+      alert("Güncelleme başarısız oldu.");
     }
   };
 
@@ -119,7 +163,7 @@ function Home() {
                 <p className="text-gray-400 text-sm mb-4 line-clamp-3">{event.description}</p>
                 
                 <div className="text-sm text-gray-500 mb-6 space-y-1 bg-gray-900 p-3 rounded">
-                  <p>📅 {event.date}</p>
+                  <p>📅 {event.date ? new Date(event.date).toLocaleDateString('tr-TR') : event.date}</p>
                   <p>📍 {event.location}</p>
                 </div>
               </div>
@@ -143,7 +187,15 @@ function Home() {
                     >
                       👥
                     </button>
-                    {/* SİLME BUTONU */}
+                    {/* DÜZENLE BUTONU (YENİ) */}
+                    <button 
+                      onClick={() => handleEditClick(event)}
+                      className="bg-yellow-600 hover:bg-yellow-700 text-white px-3 py-2 rounded transition"
+                      title="Düzenle"
+                    >
+                      ✏️
+                    </button>
+                    {/* SİL BUTONU */}
                     <button 
                       onClick={() => handleDeleteEvent(event.id)}
                       className="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded transition"
@@ -159,7 +211,7 @@ function Home() {
         </div>
       )}
 
-      {/* MODAL */}
+      {/* --- KATILIMCI MODAL --- */}
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
           <div className="bg-gray-800 p-6 rounded-lg w-full max-w-md border border-gray-600 relative">
@@ -192,6 +244,56 @@ function Home() {
           </div>
         </div>
       )}
+
+      {/* --- DÜZENLEME MODALI (YENİ) --- */}
+      {showEditModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
+          <div className="bg-gray-800 p-6 rounded-lg w-full max-w-md border border-yellow-500 relative shadow-2xl shadow-yellow-900/50">
+            <button 
+              onClick={() => setShowEditModal(false)}
+              className="absolute top-3 right-3 text-gray-400 hover:text-white text-xl"
+            >
+              ✕
+            </button>
+            <h3 className="text-xl font-bold mb-4 text-yellow-400 border-b border-gray-700 pb-2">
+              ✏️ Etkinliği Düzenle
+            </h3>
+            
+            <form onSubmit={handleUpdateEvent} className="space-y-3">
+              <div>
+                <label className="text-xs text-gray-400">Başlık</label>
+                <input className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600" value={editTitle} onChange={e => setEditTitle(e.target.value)} required />
+              </div>
+              
+              <div>
+                <label className="text-xs text-gray-400">Açıklama</label>
+                <textarea className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600 h-20" value={editDesc} onChange={e => setEditDesc(e.target.value)} />
+              </div>
+
+              <div className="flex gap-2">
+                <div className="w-1/2">
+                  <label className="text-xs text-gray-400">Tarih</label>
+                  <input type="date" className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600" value={editDate} onChange={e => setEditDate(e.target.value)} required />
+                </div>
+                <div className="w-1/2">
+                  <label className="text-xs text-gray-400">Fiyat</label>
+                  <input type="number" className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600" value={editPrice} onChange={e => setEditPrice(e.target.value)} required />
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs text-gray-400">Konum</label>
+                <input className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600" value={editLoc} onChange={e => setEditLoc(e.target.value)} required />
+              </div>
+
+              <button className="w-full bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 rounded mt-2 transition">
+                Değişiklikleri Kaydet
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
