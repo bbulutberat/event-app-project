@@ -12,7 +12,7 @@ function Home() {
   const [showModal, setShowModal] = useState(false);
   const [currentEventTitle, setCurrentEventTitle] = useState("");
 
-  // --- DÜZENLEME MODAL STATE (YENİ EKLENDİ) ---
+  // --- DÜZENLEME MODAL STATE ---
   const [showEditModal, setShowEditModal] = useState(false);
   const [editEventId, setEditEventId] = useState(null);
   
@@ -22,6 +22,10 @@ function Home() {
   const [editDate, setEditDate] = useState("");
   const [editLoc, setEditLoc] = useState("");
   const [editPrice, setEditPrice] = useState("");
+
+  // --- ETKİNLİKLERİM MODAL STATE (YENİ) ---
+  const [myRegistrations, setMyRegistrations] = useState([]);
+  const [showMyRegModal, setShowMyRegModal] = useState(false);
 
   useEffect(() => {
     if (!user) {
@@ -76,7 +80,7 @@ function Home() {
     }
   };
 
-  // --- DÜZENLEME PENCERESİNİ AÇMA (YENİ) ---
+  // --- DÜZENLEME PENCERESİNİ AÇMA ---
   const handleEditClick = (event) => {
     setEditEventId(event.id);
     setEditTitle(event.title);
@@ -89,7 +93,7 @@ function Home() {
     setShowEditModal(true); // Modalı aç
   };
 
-  // --- GÜNCELLEMEYİ KAYDETME (YENİ) ---
+  // --- GÜNCELLEMEYİ KAYDETME ---
   const handleUpdateEvent = async (e) => {
     e.preventDefault();
     try {
@@ -106,6 +110,32 @@ function Home() {
       fetchEvents(); // Listeyi yenile ki değişiklik görünsün
     } catch (error) {
       alert("Güncelleme başarısız oldu.");
+    }
+  };
+
+  // --- KULLANICININ KAYITLARINI ÇEK (YENİ) ---
+  const fetchMyRegistrations = async () => {
+    try {
+      const res = await api.get(`/registrations/user/${user.id}`);
+      setMyRegistrations(res.data);
+      setShowMyRegModal(true);
+    } catch (error) {
+      alert("Kayıtlarınız çekilemedi.");
+    }
+  };
+
+  // --- KAYIT İPTAL ETME (YENİ) ---
+  const handleCancelRegistration = async (regId) => {
+    if (window.confirm("Bu etkinlik kaydını iptal etmek istediğine emin misin?")) {
+      try {
+        await api.delete(`/registrations/${regId}`);
+        alert("Kayıt iptal edildi.");
+        // Listeyi anlık güncellemek için tekrar çekiyoruz
+        const res = await api.get(`/registrations/user/${user.id}`);
+        setMyRegistrations(res.data);
+      } catch (error) {
+        alert("İptal işlemi başarısız.");
+      }
     }
   };
 
@@ -129,6 +159,14 @@ function Home() {
         </div>
 
         <div className="flex gap-4">
+          {/* YENİ BUTON: Etkinliklerim */}
+          <button 
+            onClick={fetchMyRegistrations} 
+            className="bg-blue-500 px-4 py-2 rounded hover:bg-blue-600 text-white font-bold transition"
+          >
+            📅 Etkinliklerim
+          </button>
+
           {user.role === 'admin' && (
             <Link to="/admin" className="bg-yellow-600 px-4 py-2 rounded hover:bg-yellow-700 text-white font-bold transition">
               ⚙️ Yönetici Paneli
@@ -187,7 +225,7 @@ function Home() {
                     >
                       👥
                     </button>
-                    {/* DÜZENLE BUTONU (YENİ) */}
+                    {/* DÜZENLE BUTONU */}
                     <button 
                       onClick={() => handleEditClick(event)}
                       className="bg-yellow-600 hover:bg-yellow-700 text-white px-3 py-2 rounded transition"
@@ -211,7 +249,7 @@ function Home() {
         </div>
       )}
 
-      {/* --- KATILIMCI MODAL --- */}
+      {/* --- KATILIMCI MODAL (ADMİN İÇİN) --- */}
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
           <div className="bg-gray-800 p-6 rounded-lg w-full max-w-md border border-gray-600 relative">
@@ -245,7 +283,62 @@ function Home() {
         </div>
       )}
 
-      {/* --- DÜZENLEME MODALI (YENİ) --- */}
+      {/* --- ETKİNLİKLERİM MODALI (HERKES İÇİN - YENİ) --- */}
+      {showMyRegModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
+          <div className="bg-gray-800 p-6 rounded-lg w-full max-w-2xl border border-blue-500 relative shadow-2xl">
+            <button 
+              onClick={() => setShowMyRegModal(false)}
+              className="absolute top-3 right-3 text-gray-400 hover:text-white text-xl"
+            >
+              ✕
+            </button>
+            <h3 className="text-xl font-bold mb-4 text-blue-400 border-b border-gray-700 pb-2">
+              📅 Katıldığım Etkinlikler
+            </h3>
+            
+            <div className="max-h-80 overflow-y-auto">
+              {myRegistrations.length === 0 ? (
+                <p className="text-gray-500 text-center py-4">Henüz bir etkinliğe kayıt olmadınız.</p>
+              ) : (
+                <table className="w-full text-left text-sm text-gray-300">
+                  <thead className="bg-gray-700 text-xs uppercase text-gray-400">
+                    <tr>
+                      <th className="p-3">Etkinlik</th>
+                      <th className="p-3">Kategori</th>
+                      <th className="p-3">Etkinlik Tarihi</th>
+                      <th className="p-3 text-right">İşlem</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {myRegistrations.map((reg) => (
+                      <tr key={reg.id} className="border-b border-gray-700 hover:bg-gray-700 transition">
+                        <td className="p-3 font-bold text-white">{reg.event.title}</td>
+                        <td className="p-3">
+                            <span className="bg-blue-900 text-blue-200 px-2 py-1 rounded text-xs uppercase font-bold">
+                                {reg.event.category?.name || "-"}
+                            </span>
+                        </td>
+                        <td className="p-3">{new Date(reg.event.date).toLocaleDateString('tr-TR')}</td>
+                        <td className="p-3 text-right">
+                          <button 
+                            onClick={() => handleCancelRegistration(reg.id)}
+                            className="text-red-400 hover:text-red-200 hover:underline bg-red-900/20 px-3 py-1 rounded border border-red-900/50"
+                          >
+                            İptal Et ❌
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* --- DÜZENLEME MODALI (ADMİN İÇİN) --- */}
       {showEditModal && (
         <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
           <div className="bg-gray-800 p-6 rounded-lg w-full max-w-md border border-yellow-500 relative shadow-2xl shadow-yellow-900/50">

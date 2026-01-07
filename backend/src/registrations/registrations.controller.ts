@@ -17,11 +17,18 @@ export class RegistrationsController {
     return this.registrationsService.findAll();
   }
 
-  // Frontend buraya istek atacak
+  // Frontend buraya istek atacak (Etkinliğe göre katılımcılar)
   @Get('event/:eventId')
   findByEvent(@Param('eventId') eventId: string) {
     return this.registrationsService.findByEvent(+eventId);
   }
+
+  // --- YENİ EKLENEN: KULLANICIYA GÖRE KAYITLAR ---
+  @Get('user/:userId')
+  findByUser(@Param('userId') userId: string) {
+    return this.registrationsService.findByUser(+userId);
+  }
+  // -----------------------------------------------
 
   @Get(':id')
   findOne(@Param('id') id: string) {

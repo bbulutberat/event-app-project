@@ -39,11 +39,18 @@ export class UsersService {
     });
   }
 
+  // --- GÜNCELLENEN KISIM ---
+  // Artık kullanıcıyı çekerken 'registrations' (kayıtlar) 
+  // ve o kayıtların içindeki 'event' (etkinlik) detaylarını da getiriyoruz.
   findOne(id: number) {
-    return this.userRepository.findOneBy({ id });
+    return this.userRepository.findOne({
+      where: { id },
+      relations: ['registrations', 'registrations.event'], 
+    });
   }
+  // -------------------------
 
-  // --- DEDEKTİF MODU AKTİF ---
+  // --- DEDEKTİF MODU (Debug) ---
   async update(id: number, updateUserDto: any) {
     console.log("DEDEKTIF: Guncelleme istegi geldi. ID:", id);
     console.log("DEDEKTIF: Gelen veri:", JSON.stringify(updateUserDto));
@@ -58,7 +65,6 @@ export class UsersService {
     
     // Şifre kontrolü
     if (updateUserDto.role === 'admin') {
-      // Şifre 123456 ise admin yap, değilse yapma
       if (updateUserDto.adminSecret === '123456') {
         cleanData.role = 'admin';
         console.log("DEDEKTIF: Şifre doğru, admin yetkisi veriliyor.");
@@ -70,19 +76,15 @@ export class UsersService {
     console.log("DEDEKTIF: Veritabanına gönderilecek TEMIZ veri:", JSON.stringify(cleanData));
 
     try {
-      // Güncellemeyi dene
       const result = await this.userRepository.update(id, cleanData);
       return result;
 
     } catch (error) {
-      // HATA OLURSA BURAYA DÜŞECEK
       console.error("DEDEKTIF: Veritabanı hatası oluştu!", error);
-      
-      // Postman'e hatayı olduğu gibi gönderiyoruz
       throw new InternalServerErrorException({
         message: "Veritabanı güncelleme hatası",
-        errorDetail: error.message, // Hatanın asıl sebebi burada yazacak
-        sqlMessage: error.sqlMessage // SQL hatası varsa burada yazar
+        errorDetail: error.message,
+        sqlMessage: error.sqlMessage
       });
     }
   }

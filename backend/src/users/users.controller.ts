@@ -29,6 +29,8 @@ export class UsersController {
 
   @Get(':id')
   findOne(@Param('id') id: string) {
+    // Service kısmında yaptığımız güncelleme sayesinde
+    // burası artık kullanıcının etkinliklerini de döndürecek.
     return this.usersService.findOne(+id);
   }
 

@@ -1,4 +1,4 @@
-import { Injectable, ConflictException } from '@nestjs/common'; // ConflictException eklendi
+import { Injectable, ConflictException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Registration } from './entities/registration.entity';
@@ -41,6 +41,16 @@ export class RegistrationsService {
       relations: ['user'],
     });
   }
+
+  // --- YENİ EKLENEN: KULLANICININ KAYITLARINI BUL ---
+  findByUser(userId: number) {
+    return this.registrationRepository.find({
+      where: { user: { id: userId } },
+      relations: ['event', 'event.category'], // Etkinlik ve kategori detaylarını da getir
+      order: { registrationDate: 'DESC' } // En yeniden en eskiye sırala
+    });
+  }
+  // --------------------------------------------------
 
   findOne(id: number) {
     return this.registrationRepository.findOne({ 
