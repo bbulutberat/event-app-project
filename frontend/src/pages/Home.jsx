@@ -23,7 +23,7 @@ function Home() {
   const [editLoc, setEditLoc] = useState("");
   const [editPrice, setEditPrice] = useState("");
 
-  // --- ETKİNLİKLERİM MODAL STATE (YENİ) ---
+  // --- ETKİNLİKLERİM MODAL STATE ---
   const [myRegistrations, setMyRegistrations] = useState([]);
   const [showMyRegModal, setShowMyRegModal] = useState(false);
 
@@ -113,7 +113,7 @@ function Home() {
     }
   };
 
-  // --- KULLANICININ KAYITLARINI ÇEK (YENİ) ---
+  // --- KULLANICININ KAYITLARINI ÇEK ---
   const fetchMyRegistrations = async () => {
     try {
       const res = await api.get(`/registrations/user/${user.id}`);
@@ -124,7 +124,7 @@ function Home() {
     }
   };
 
-  // --- KAYIT İPTAL ETME (YENİ) ---
+  // --- KAYIT İPTAL ETME ---
   const handleCancelRegistration = async (regId) => {
     if (window.confirm("Bu etkinlik kaydını iptal etmek istediğine emin misin?")) {
       try {
@@ -159,7 +159,6 @@ function Home() {
         </div>
 
         <div className="flex gap-4">
-          {/* YENİ BUTON: Etkinliklerim */}
           <button 
             onClick={fetchMyRegistrations} 
             className="bg-blue-500 px-4 py-2 rounded hover:bg-blue-600 text-white font-bold transition"
@@ -283,10 +282,10 @@ function Home() {
         </div>
       )}
 
-      {/* --- ETKİNLİKLERİM MODALI (HERKES İÇİN - YENİ) --- */}
+      {/* --- ETKİNLİKLERİM MODALI (HERKES İÇİN - GÜNCELLENDİ) --- */}
       {showMyRegModal && (
         <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
-          <div className="bg-gray-800 p-6 rounded-lg w-full max-w-2xl border border-blue-500 relative shadow-2xl">
+          <div className="bg-gray-800 p-6 rounded-lg w-full max-w-3xl border border-blue-500 relative shadow-2xl">
             <button 
               onClick={() => setShowMyRegModal(false)}
               className="absolute top-3 right-3 text-gray-400 hover:text-white text-xl"
@@ -302,11 +301,13 @@ function Home() {
                 <p className="text-gray-500 text-center py-4">Henüz bir etkinliğe kayıt olmadınız.</p>
               ) : (
                 <table className="w-full text-left text-sm text-gray-300">
-                  <thead className="bg-gray-700 text-xs uppercase text-gray-400">
+                  <thead className="bg-gray-700 text-xs uppercase text-gray-400 sticky top-0">
                     <tr>
                       <th className="p-3">Etkinlik</th>
                       <th className="p-3">Kategori</th>
+                      <th className="p-3">Fiyat</th>
                       <th className="p-3">Etkinlik Tarihi</th>
+                      <th className="p-3">Kayıt Tarihi</th>
                       <th className="p-3 text-right">İşlem</th>
                     </tr>
                   </thead>
@@ -319,7 +320,9 @@ function Home() {
                                 {reg.event.category?.name || "-"}
                             </span>
                         </td>
-                        <td className="p-3">{new Date(reg.event.date).toLocaleDateString('tr-TR')}</td>
+                        <td className="p-3 text-green-400 font-bold">{reg.event.price} ₺</td>
+                        <td className="p-3 text-gray-300">{new Date(reg.event.date).toLocaleDateString('tr-TR')}</td>
+                        <td className="p-3 text-blue-300">{new Date(reg.registrationDate).toLocaleDateString('tr-TR')}</td>
                         <td className="p-3 text-right">
                           <button 
                             onClick={() => handleCancelRegistration(reg.id)}
