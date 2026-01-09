@@ -7,23 +7,23 @@ function Home() {
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem("user"));
 
-  // --- KATILIMCI MODAL STATE ---
+  
   const [participants, setParticipants] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [currentEventTitle, setCurrentEventTitle] = useState("");
 
-  // --- DÜZENLEME MODAL STATE ---
+  
   const [showEditModal, setShowEditModal] = useState(false);
   const [editEventId, setEditEventId] = useState(null);
   
-  // Düzenleme Formu Verileri
+  
   const [editTitle, setEditTitle] = useState("");
   const [editDesc, setEditDesc] = useState("");
   const [editDate, setEditDate] = useState("");
   const [editLoc, setEditLoc] = useState("");
   const [editPrice, setEditPrice] = useState("");
 
-  // --- ETKİNLİKLERİM MODAL STATE ---
+  
   const [myRegistrations, setMyRegistrations] = useState([]);
   const [showMyRegModal, setShowMyRegModal] = useState(false);
 
@@ -56,7 +56,7 @@ function Home() {
     }
   };
 
-  // --- SİLME FONKSİYONU ---
+  
   const handleDeleteEvent = async (eventId) => {
     if (window.confirm("Bu etkinliği silmek istediğinize emin misiniz? (Bu işlem geri alınamaz)")) {
       try {
@@ -80,20 +80,19 @@ function Home() {
     }
   };
 
-  // --- DÜZENLEME PENCERESİNİ AÇMA ---
+  
   const handleEditClick = (event) => {
     setEditEventId(event.id);
     setEditTitle(event.title);
     setEditDesc(event.description);
-    // Tarih formatını HTML input'a (YYYY-MM-DD) uyumlu hale getir
     setEditDate(event.date ? event.date.toString().split('T')[0] : "");
     setEditLoc(event.location);
     setEditPrice(event.price);
     
-    setShowEditModal(true); // Modalı aç
+    setShowEditModal(true); 
   };
 
-  // --- GÜNCELLEMEYİ KAYDETME ---
+  
   const handleUpdateEvent = async (e) => {
     e.preventDefault();
     try {
@@ -106,14 +105,14 @@ function Home() {
       });
 
       alert("Etkinlik Güncellendi! ✅");
-      setShowEditModal(false); // Modalı kapat
-      fetchEvents(); // Listeyi yenile ki değişiklik görünsün
+      setShowEditModal(false); 
+      fetchEvents(); 
     } catch (error) {
       alert("Güncelleme başarısız oldu.");
     }
   };
 
-  // --- KULLANICININ KAYITLARINI ÇEK ---
+
   const fetchMyRegistrations = async () => {
     try {
       const res = await api.get(`/registrations/user/${user.id}`);
@@ -124,13 +123,12 @@ function Home() {
     }
   };
 
-  // --- KAYIT İPTAL ETME ---
+
   const handleCancelRegistration = async (regId) => {
     if (window.confirm("Bu etkinlik kaydını iptal etmek istediğine emin misin?")) {
       try {
         await api.delete(`/registrations/${regId}`);
         alert("Kayıt iptal edildi.");
-        // Listeyi anlık güncellemek için tekrar çekiyoruz
         const res = await api.get(`/registrations/user/${user.id}`);
         setMyRegistrations(res.data);
       } catch (error) {
@@ -151,7 +149,7 @@ function Home() {
       {/* Header */}
       <div className="flex justify-between items-center mb-8 border-b border-gray-700 pb-4">
         <div>
-          <h1 className="text-3xl font-bold text-blue-500">EventApp 🚀</h1>
+          <h1 className="text-3xl font-bold text-blue-500">EventApp </h1>
           <div className="flex items-center gap-2 text-gray-400">
             <span>Hoşgeldin, {user.firstName} {user.lastName}</span>
             <span className="text-xs bg-gray-700 px-2 py-1 rounded uppercase border border-gray-600">{user.role}</span>
@@ -177,7 +175,7 @@ function Home() {
         </div>
       </div>
 
-      {/* Etkinlik Listesi */}
+      {}
       <h2 className="text-2xl font-bold mb-6">Güncel Etkinlikler</h2>
       
       {events.length === 0 ? (
@@ -205,7 +203,7 @@ function Home() {
                 </div>
               </div>
 
-              {/* BUTONLAR */}
+              {}
               <div className="p-4 bg-gray-900 flex gap-2">
                  <button 
                   onClick={() => handleJoin(event.id)}
@@ -214,7 +212,7 @@ function Home() {
                   Etkinliğe Katıl
                 </button>
 
-                {/* SADECE ADMIN GÖRÜR */}
+                {}
                 {user.role === 'admin' && (
                   <>
                     <button 
@@ -224,7 +222,7 @@ function Home() {
                     >
                       👥
                     </button>
-                    {/* DÜZENLE BUTONU */}
+                    {}
                     <button 
                       onClick={() => handleEditClick(event)}
                       className="bg-yellow-600 hover:bg-yellow-700 text-white px-3 py-2 rounded transition"
@@ -232,7 +230,7 @@ function Home() {
                     >
                       ✏️
                     </button>
-                    {/* SİL BUTONU */}
+                    {}
                     <button 
                       onClick={() => handleDeleteEvent(event.id)}
                       className="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded transition"
@@ -248,7 +246,7 @@ function Home() {
         </div>
       )}
 
-      {/* --- KATILIMCI MODAL (ADMİN İÇİN) --- */}
+      {}
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
           <div className="bg-gray-800 p-6 rounded-lg w-full max-w-md border border-gray-600 relative">
@@ -282,7 +280,7 @@ function Home() {
         </div>
       )}
 
-      {/* --- ETKİNLİKLERİM MODALI (HERKES İÇİN - GÜNCELLENDİ) --- */}
+      {}
       {showMyRegModal && (
         <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
           <div className="bg-gray-800 p-6 rounded-lg w-full max-w-3xl border border-blue-500 relative shadow-2xl">
@@ -341,7 +339,7 @@ function Home() {
         </div>
       )}
 
-      {/* --- DÜZENLEME MODALI (ADMİN İÇİN) --- */}
+      {}
       {showEditModal && (
         <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
           <div className="bg-gray-800 p-6 rounded-lg w-full max-w-md border border-yellow-500 relative shadow-2xl shadow-yellow-900/50">
